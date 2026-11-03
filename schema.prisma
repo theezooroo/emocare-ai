@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  age       Int?
+  role      String   @default("USER") // USER, ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions  Session[]
+}
+
+model Exercise {
+  id          String   @id @default(uuid())
+  category    String
+  name        String
+  duration    String
+  difficulty  String
+  description String?
+  
+  sessions    Session[]
+}
+
+model Session {
+  id              String   @id @default(uuid())
+  userId          String
+  exerciseId      String
+  startTime       DateTime
+  endTime         DateTime?
+  duration        Int?     // in seconds (actual completed duration)
+  targetDuration  Int?     // in seconds (custom target duration, e.g. 120, 300, 600, 900)
+  dominantEmotion String?
+  avgConfidence   Float?
+  status          String   @default("NOT_STARTED") // NOT_STARTED, ACTIVE, PAUSED, COMPLETED, CANCELLED
+  recommendation  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  observations    EmotionObservation[]
+  user            User     @relation(fields: [userId], references: [id])
+  exercise        Exercise @relation(fields: [exerciseId], references: [id])
+}
+
+model EmotionObservation {
+  id         String   @id @default(uuid())
+  sessionId  String
+  emotion    String
+  confidence Float
+  timestamp  DateTime @default(now())
+  
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
